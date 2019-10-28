@@ -1,39 +1,41 @@
-* Hacer la conexion a la protoboard (no poner el modulo bluetooth aun)
-Abrir el programa con la configuración
-Cambiar el nombre para renombrar nuestro módulo
-Poner clave que desea use este modulo
-Cargar el programa a la placa arduino
-
-Una vez cargado se dispone de 15 segundos para pinchar el módulo Bluetooth a la protoboard, y automaticamente despues se verá parpadear distinto durante un segundo el led de la plaquita Bluetooth, lo que indicará que está trabajando y cambiando el nombre.
-
-A continuación el led volverá a parpadear constantemente intermitente (estado de espera a activacion)
-
- */
-char nombre[10] = "poner_nombre"; //El nuevo nombre del modulo
-char password[10] = "poner_clave"; //la nueva clave para vincular el modulo con Android.
-char baud = '4'; //4 = 9600 baud
+ // Añadimos la librería que permite añadir pines para la comunicación serie
+  #include <SoftwareSerial.h>
+   
+  // Definimos el objeto para la comunicación serie
+  SoftwareSerial BT(10,11); // 10 RX, 11 TX.
  
-void setup()
-{
-  Serial.begin(9600);
-   
-  pinMode(13, OUTPUT);
-  digitalWrite(13, LOW);
-  delay(15000); //Esperar 15 segundos para conectar el modulo
-   
-  Serial.print("AT"); //Iniciar la configuracion
-  delay(1000);
-   
-  Serial.print("AT+NAME"); Serial.print(nombre); //Cambiar el nombre
-  delay(1000);
-   
-  Serial.print("AT+PIN"); Serial.print(password); //Cambiar contraseña
-  delay(1000);   
-   
-  Serial.print("AT+BAUD"); Serial.print(baud); //Cambiar baudios
-  delay(1000);
-   
-  digitalWrite(13, HIGH);
-}
+  int VCC = 8; // Pin digital para alimentar el módulo Bluetooth HC-05
+  int EN = 9; // Pin digital para la habilitación del módulo Bluetooth HC-05
  
-void loop(){}
+ 
+  void setup()
+  {
+    pinMode(VCC, OUTPUT); // Pin digital 8 como salida
+    pinMode(EN, OUTPUT); // Pin digital 9 como salida
+   
+    digitalWrite(EN, HIGH);  // Habilitamos el módulo Bluetooth HC-05
+    delay(500); // Esperamos 500 ms
+    digitalWrite (VCC, HIGH); // Encendemos el módulo Bluetooth HC-05
+   
+    Serial.begin(9600); // Comienzo la comunicación con el monitor serie  
+    BT.begin(38400); // Comienzo de la comunicación con el módulo Bluetooth HC-05 (por defecto)
+   
+    Serial.println("Esperando comandos AT ... ");
+  }
+ 
+  void loop()
+  {  
+    // Si hay datos disponibles en el monitor serie
+    if(Serial.available())
+    {
+       // Escribimos los valores en el módulo bluetooth HC-05
+       BT.write(Serial.read());
+    }
+   
+    // Si hay datos disponibles en el módulo bluetooth HC-05
+    if(BT.available())
+    {
+      // Mostramos los valores en el monitor serie
+      Serial.write(BT.read());
+    }
+  }
